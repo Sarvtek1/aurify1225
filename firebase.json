@@ -1,13 +1,16 @@
 {
   "hosting": {
-    "source": "aurify-web",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
+    "public": "public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "run": { "serviceId": "aurify-ssr", "region": "me-central1" }
+      }
     ]
   },
-  "frameworksBackend": {
-    "region": "europe-west1"
+  "firestore": {
+    "rules": "data/firestore/rules/firestore.rules",
+    "indexes": "data/firestore/indexes/firestore.indexes.json"
   }
 }
