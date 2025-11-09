@@ -1,16 +1,23 @@
 {
-  "hosting": {
-    "public": "public",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [
-      {
-        "source": "**",
-        "run": { "serviceId": "aurify-ssr", "region": "me-central1" }
-      }
-    ]
-  },
   "firestore": {
     "rules": "data/firestore/rules/firestore.rules",
     "indexes": "data/firestore/indexes/firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "aurify-ssr",
+          "region": "me-central1"
+        }
+      }
+    ]
   }
 }
