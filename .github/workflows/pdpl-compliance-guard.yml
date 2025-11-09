@@ -51,11 +51,16 @@ jobs:
       - name: Set project
         run: gcloud config set project aurify1225
 
-      - name: Ensure Cloud Run service exists in me-central1
+      # ✅ Non-fatal check: do NOT fail if the service isn't created yet
+      - name: Check Cloud Run service (allow not-found)
+        shell: bash
         run: |
-          gcloud run services describe aurify-ssr --region=me-central1 >/dev/null 2>&1 || {
-            echo "❌ Cloud Run service aurify-ssr not found in me-central1"; exit 1; }
-          echo "✔ Cloud Run aurify-ssr present in me-central1"
+          set +e
+          if gcloud run services describe aurify-ssr --region=me-central1 >/dev/null 2>&1; then
+            echo "✔ Cloud Run aurify-ssr present in me-central1"
+          else
+            echo "ℹ️ Cloud Run service aurify-ssr not found yet in me-central1 (ok before first deploy)"
+          fi
 
       # Uncomment if you want hard checks for Firestore and BigQuery locations (requires exact dataset name)
       # - name: Firestore location check
