@@ -1,5 +1,16 @@
 {
   "projects": {
     "default": "aurify1225"
+  },
+  "targets": {
+    "aurify1225": {
+      "firestore": {
+        "databases": {
+          "aurify1225": [
+            "(default)"
+          ]
+        }
+      }
+    }
   }
 }
