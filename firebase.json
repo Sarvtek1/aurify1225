@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "public": "Dynamic web framework (Next.js, etc.)",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
