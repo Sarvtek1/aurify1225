@@ -27,7 +27,6 @@ jobs:
           fi
           echo "✔ frameworksBackend not used"
 
-      # Optional: verify docs mention the correct regions
       - name: Verify compliance docs reference Doha
         run: |
           test -f docs/compliance/pdpl-readiness.md
@@ -35,7 +34,6 @@ jobs:
           grep -qi 'ME-CENTRAL1' docs/compliance/pdpl-readiness.md
           echo "✔ compliance doc references me-central1 / ME-CENTRAL1"
 
-  # (Optional) infra sanity checks – needs GCP auth using your existing secret
   infra:
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
@@ -51,7 +49,7 @@ jobs:
       - name: Set project
         run: gcloud config set project aurify1225
 
-      # ✅ Non-fatal check: do NOT fail if the service isn't created yet
+      # ✅ Non-fatal precheck (never exit 1 if service is missing)
       - name: Check Cloud Run service (allow not-found)
         shell: bash
         run: |
@@ -61,8 +59,9 @@ jobs:
           else
             echo "ℹ️ Cloud Run service aurify-ssr not found yet in me-central1 (ok before first deploy)"
           fi
+          exit 0
 
-      # Uncomment if you want hard checks for Firestore and BigQuery locations (requires exact dataset name)
+      # Optional hard checks (leave commented until you want them)
       # - name: Firestore location check
       #   run: |
       #     LOC=$(gcloud firestore databases describe --database="(default)" --format="value(locationId)")
@@ -71,7 +70,7 @@ jobs:
       #
       # - name: BigQuery dataset location check
       #   env:
-      #     DATASET: aurify_logs   # TODO: set to your dataset
+      #     DATASET: aurify_logs
       #   run: |
       #     LOC=$(bq show --format=prettyjson "$DATASET" | jq -r '.location')
       #     test "$LOC" = "ME-CENTRAL1" || { echo "❌ BQ dataset $DATASET not in ME-CENTRAL1 ($LOC)"; exit 1; }
