@@ -1,10 +1,13 @@
 {
   "hosting": {
-    "public": "Dynamic web framework (Next.js, etc.)",
+    "source": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ]
+    ],
+    "frameworksBackend": {
+      "region": "me-central1"
+    }
   }
 }
