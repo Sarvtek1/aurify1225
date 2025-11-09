@@ -1,0 +1,56 @@
+name: Deploy Aurify SSR to Cloud Run (me-central1)
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - "aurify-web/**"
+      - ".github/workflows/deploy-cloudrun.yml"
+
+permissions:
+  contents: read
+  id-token: write   # needed if you switch to Workload Identity Federation later
+
+env:
+  GCP_PROJECT_ID: aurify1225
+  GCP_REGION: me-central1
+  ARTIFACT_REPO: cloud-run-source-deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # --- AUTH (Quick start using a JSON key secret). Safer WIF option shown below. ---
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Ensure Artifact Registry exists (idempotent)
+        run: |
+          gcloud artifacts repositories describe "$ARTIFACT_REPO" --location="$GCP_REGION" \
+          || gcloud artifacts repositories create "$ARTIFACT_REPO" \
+               --location="$GCP_REGION" \
+               --repository-format=docker \
+               --description="Cloud Run source builds for Aurify1225"
+
+      - name: Deploy to Cloud Run (me-central1)
+        working-directory: ./aurify-web
+        run: |
+          gcloud run deploy aurify-ssr \
+            --region="$GCP_REGION" \
+            --allow-unauthenticated \
+            --project="$GCP_PROJECT_ID" \
+            --source . \
+            --set-env-vars=GCP_REGION="$GCP_REGION" \
+            --set-env-vars=BQ_LOCATION=ME-CENTRAL1 \
+            --set-secrets=API_KEY=MY_API_KEY:latest
