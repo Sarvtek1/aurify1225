@@ -114,3 +114,6 @@ Any change affecting regions, data flows, or processors requires:
 1. Update to this document  
 2. Review by compliance owner  
 3. Re-run of PDPL governance checklist  
+_Last reviewed:_ 2025-11-09  
+_Compliance owner:_ SARVtek  
+_Change control ref:_ PDPL-2025.11.09-01
