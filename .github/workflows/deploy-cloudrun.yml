@@ -38,42 +38,47 @@ jobs:
           gcloud --version
           gcloud config list
 
-      # ✅ Non-failing pre-check: do NOT error if the service isn't created yet
+      # ✅ Non-failing pre-check: ok if service doesn't exist yet
       - name: Check Cloud Run service (allow not-found)
-        continue-on-error: true
+        shell: bash
         run: |
-          gcloud run services describe aurify-ssr \
-            --region="${{ env.GCP_REGION }}" \
-            --project="${{ env.GCP_PROJECT_ID }}" >/dev/null 2>&1 \
-            && echo "Service exists" \
-            || echo "Service not found yet (ok before first deploy)"
+          if gcloud run services describe aurify-ssr \
+               --region="${GCP_REGION}" \
+               --project="${GCP_PROJECT_ID}" >/dev/null 2>&1; then
+            echo "Service exists"
+          else
+            echo "Service not found yet (ok before first deploy)"
+          fi
 
       - name: Ensure Artifact Registry exists (idempotent)
+        shell: bash
         run: |
           gcloud artifacts repositories describe cloud-run-source-deploy \
-            --location="${{ env.GCP_REGION }}" \
-            --project="${{ env.GCP_PROJECT_ID }}" \
+            --location="${GCP_REGION}" \
+            --project="${GCP_PROJECT_ID}" \
           || gcloud artifacts repositories create cloud-run-source-deploy \
-               --location="${{ env.GCP_REGION }}" \
+               --location="${GCP_REGION}" \
                --repository-format=docker \
                --description="Cloud Run source builds for Aurify1225" \
-               --project="${{ env.GCP_PROJECT_ID }}"
+               --project="${GCP_PROJECT_ID}"
 
       - name: Deploy to Cloud Run (me-central1)
         working-directory: ./aurify-web
+        shell: bash
         run: |
           gcloud run deploy aurify-ssr \
-            --region="${{ env.GCP_REGION }}" \
+            --region="${GCP_REGION}" \
             --allow-unauthenticated \
-            --project="${{ env.GCP_PROJECT_ID }}" \
+            --project="${GCP_PROJECT_ID}" \
             --source . \
-            --set-env-vars=GCP_REGION="${{ env.GCP_REGION }}" \
+            --set-env-vars=GCP_REGION="${GCP_REGION}" \
             --set-env-vars=BQ_LOCATION=ME-CENTRAL1 \
             --set-secrets=API_KEY=MY_API_KEY:latest
 
       - name: Verify deploy
+        shell: bash
         run: |
           gcloud run services describe aurify-ssr \
-            --region="${{ env.GCP_REGION }}" \
-            --project="${{ env.GCP_PROJECT_ID }}" \
+            --region="${GCP_REGION}" \
+            --project="${GCP_PROJECT_ID}" \
             --format="value(status.url)"
