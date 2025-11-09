@@ -4,6 +4,9 @@ on:
   pull_request:
     branches: [ master, main ]
 
+permissions:
+  contents: read
+
 jobs:
   deploy_preview:
     runs-on: ubuntu-latest
@@ -15,12 +18,18 @@ jobs:
         with:
           node-version: '20'
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      # If your preview needs a build first, uncomment:
+      # - run: npm ci && npm run build
+      #   working-directory: ./aurify-web
+
+      - name: Deploy Preview Channel
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AURIFY1225 }}
+          firebaseServiceAccount: ${{ secrets.GCP_SA_KEY }}
           projectId: aurify1225
+          # How long preview stays alive
           expires: 7d
         env:
-          # <<< REQUIRED FOR NEXT.JS SSR DEPLOYMENT IN CI >>>
+          # ✅ REQUIRED for SSR/frameworks deployment
           FIREBASE_CLI_EXPERIMENTS: webframeworks

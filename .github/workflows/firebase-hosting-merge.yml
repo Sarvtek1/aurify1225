@@ -4,6 +4,9 @@ on:
   push:
     branches: [ master, main ]
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -16,17 +19,18 @@ jobs:
         with:
           node-version: '20'
 
-      # (Optional) Install if your app needs a build step pre-deploy
+      # If you have a custom build step for the Next.js app, uncomment:
       # - run: npm ci && npm run build
       #   working-directory: ./aurify-web
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Deploy to Firebase Hosting (live)
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AURIFY1225 }}
+          # 🔐 Use the same service-account JSON you use elsewhere
+          firebaseServiceAccount: ${{ secrets.GCP_SA_KEY }}
           projectId: aurify1225
-          # For production deploy; omit channelId for live by default or set:
           channelId: live
         env:
-          # <<< THIS UNBLOCKS WEB FRAMEWORKS DEPLOY IN CI >>>
+          # ✅ REQUIRED to enable framework (Next.js) deploys in CI
           FIREBASE_CLI_EXPERIMENTS: webframeworks
