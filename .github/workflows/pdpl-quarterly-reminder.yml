@@ -6,6 +6,10 @@ on:
     - cron: "0 8 1 1,4,7,10 *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   open_or_reuse_issue:
     runs-on: ubuntu-latest
@@ -18,16 +22,20 @@ jobs:
           # Compute quarter from current month (UTC)
           M=$(date -u +%m | sed 's/^0*//')
           Y=$(date -u +%Y)
-          if   [ $M -le 3 ];  then Q=Q1; elif [ $M -le 6 ]; then Q=Q2;
-          elif [ $M -le 9 ];  then Q=Q3; else Q=Q4; fi
-          echo "title=[PDPL] Quarterly Compliance Review — ${Q} ${Y}" >> $GITHUB_OUTPUT
+          if   [ $M -le 3 ];  then Q=Q1;
+          elif [ $M -le 6 ];  then Q=Q2;
+          elif [ $M -le 9 ];  then Q=Q3;
+          else                      Q=Q4; fi
+          echo "title=[PDPL] Quarterly Compliance Review — ${Q} ${Y}" >> "$GITHUB_OUTPUT"
 
       - name: Find existing open issue
         id: find
         uses: actions/github-script@v7
+        env:
+          TITLE: ${{ steps.meta.outputs.title }}
         with:
           script: |
-            const title = core.getInput('title', { required: true });
+            const title = process.env.TITLE;
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -35,14 +43,13 @@ jobs:
               labels: 'compliance,PDPL'
             });
             const existing = issues.find(i => i.title === title);
-            core.setOutput('number', existing ? existing.number : '');
-          result-encoding: string
-        env:
-          title: ${{ steps.meta.outputs.title }}
+            core.setOutput('number', existing ? String(existing.number) : '');
 
       - name: Create issue (if none open)
         if: steps.find.outputs.number == ''
         uses: actions/github-script@v7
+        env:
+          TITLE: ${{ steps.meta.outputs.title }}
         with:
           script: |
             const body = `
@@ -70,12 +77,12 @@ Please complete the quarterly review using the in-repo checklist:
               labels: ['compliance','PDPL']
             });
             core.info(`Created issue #${issue.number}`);
-        env:
-          TITLE: ${{ steps.meta.outputs.title }}
 
       - name: Comment on existing issue (nudge)
         if: steps.find.outputs.number != ''
         uses: actions/github-script@v7
+        env:
+          NUM: ${{ steps.find.outputs.number }}
         with:
           script: |
             await github.rest.issues.createComment({
@@ -84,5 +91,3 @@ Please complete the quarterly review using the in-repo checklist:
               issue_number: Number(process.env.NUM),
               body: "⏰ Quarterly PDPL review reminder. Please complete the checklist and update **pdpl-readiness.md** if anything changed."
             });
-        env:
-          NUM: ${{ steps.find.outputs.number }}
