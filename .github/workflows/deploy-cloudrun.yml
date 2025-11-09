@@ -33,8 +33,14 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
+      - name: Verify gcloud context
+        run: |
+          gcloud --version
+          gcloud config list
+
       # ✅ Non-failing pre-check: do NOT error if the service isn't created yet
       - name: Check Cloud Run service (allow not-found)
+        continue-on-error: true
         run: |
           gcloud run services describe aurify-ssr \
             --region="${{ env.GCP_REGION }}" \
