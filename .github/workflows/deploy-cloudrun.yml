@@ -40,8 +40,8 @@ jobs:
           bq --version || true
           gcloud config list
 
-      # ✅ PDPL guard — BigQuery dataset residency & retention (verbose + robust)
-      - name: PDPL guard: BigQuery residency & retention
+      # PDPL guard - BigQuery dataset residency & retention (verbose + robust)
+      - name: "PDPL guard - BigQuery residency & retention"
         shell: bash
         env:
           WRITER_SA: service-671472133551@gcp-sa-logging.iam.gserviceaccount.com
@@ -50,13 +50,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "Installing jq for structured JSON checks…"
+          echo "Installing jq for structured JSON checks..."
           sudo apt-get update -y >/dev/null
           sudo apt-get install -y jq >/dev/null
 
-          echo "Fetching dataset JSON…"
+          echo "Fetching dataset JSON..."
           DS_JSON="$(bq --location="${BQ_LOCATION}" --project_id="${GCP_PROJECT_ID}" show --format=json "${DATASET_ID}")" || {
-            echo "❌ Dataset ${DATASET_ID} not found in project ${GCP_PROJECT_ID} (location ${BQ_LOCATION})"
+            echo "ERROR: Dataset ${DATASET_ID} not found in project ${GCP_PROJECT_ID} (location ${BQ_LOCATION})"
             exit 1
           }
 
@@ -66,44 +66,44 @@ jobs:
           # 1) Check region = ME-CENTRAL1 (case-insensitive)
           LOCATION_LOWER="$(echo "${DS_JSON}" | jq -r '.location' | tr '[:upper:]' '[:lower:]')"
           if [[ "${LOCATION_LOWER}" != "me-central1" ]]; then
-            echo "❌ Dataset ${DATASET_ID} in wrong location: '${LOCATION_LOWER}' (expected 'me-central1')"
+            echo "ERROR: Dataset ${DATASET_ID} in wrong location: '${LOCATION_LOWER}' (expected 'me-central1')"
             exit 1
           else
-            echo "✅ Location OK: ${LOCATION_LOWER}"
+            echo "OK: Location ${LOCATION_LOWER}"
           fi
 
           # 2) Check default table expiration = 12 months
           EXP_MS="$(echo "${DS_JSON}" | jq -r '.defaultTableExpirationMs // empty')"
           if [[ -z "${EXP_MS}" ]]; then
-            echo "❌ defaultTableExpirationMs is not set (expected 31536000000 ms = 12 months)"
+            echo "ERROR: defaultTableExpirationMs is not set (expected 31536000000 ms = 12 months)"
             exit 1
           elif [[ "${EXP_MS}" != "31536000000" ]]; then
-            echo "❌ defaultTableExpirationMs is ${EXP_MS} (expected 31536000000 ms = 12 months)"
+            echo "ERROR: defaultTableExpirationMs is ${EXP_MS} (expected 31536000000 ms = 12 months)"
             exit 1
           else
-            echo "✅ Default table expiration OK: ${EXP_MS} ms"
+            echo "OK: Default table expiration ${EXP_MS} ms"
           fi
 
           # 3) Sink exists
           if ! gcloud logging sinks describe bq_aurify_logs >/dev/null 2>&1; then
-            echo "❌ Logging sink 'bq_aurify_logs' not found"
+            echo "ERROR: Logging sink 'bq_aurify_logs' not found"
             exit 1
           else
-            echo "✅ Sink exists: bq_aurify_logs"
+            echo "OK: Sink exists bq_aurify_logs"
           fi
 
           # 4) Sink writer has dataset IAM
           ACCESS_JSON="$(bq --location="${BQ_LOCATION}" --project_id="${GCP_PROJECT_ID}" show --format=prettyjson "${DATASET_ID}")"
           if echo "${ACCESS_JSON}" | jq -e --arg sa "${WRITER_SA}" '.access[]?|select(.userByEmail==$sa)' >/dev/null; then
-            echo "✅ Sink writer IAM OK: ${WRITER_SA}"
+            echo "OK: Sink writer IAM ${WRITER_SA}"
           else
-            echo "❌ Sink writer ${WRITER_SA} missing on dataset IAM (add BigQuery Data Editor on ${DATASET_ID})"
+            echo "ERROR: Sink writer ${WRITER_SA} missing on dataset IAM (add BigQuery Data Editor on ${DATASET_ID})"
             exit 1
           fi
 
-          echo "✅ PDPL BigQuery checks passed (ME-CENTRAL1 + 12-month default + sink IAM)"
+          echo "SUCCESS: PDPL BigQuery checks passed (ME-CENTRAL1 + 12-month default + sink IAM)"
 
-      # ✅ Non-failing pre-check: ok if service doesn't exist yet
+      # Non-failing pre-check: ok if service doesn't exist yet
       - name: Check Cloud Run service (allow not-found)
         shell: bash
         run: |
