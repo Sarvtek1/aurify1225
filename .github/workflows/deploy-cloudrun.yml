@@ -1,5 +1,47 @@
+name: Deploy Aurify SSR to Cloud Run (me-central1)
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - "aurify-web/**"
+      - ".github/workflows/deploy-cloudrun.yml"
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  GCP_PROJECT_ID: aurify1225
+  GCP_REGION: me-central1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud (with BigQuery CLI)
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          install_components: bq
+
+      - name: Verify gcloud context
+        shell: bash
+        run: |
+          gcloud --version
+          bq --version || true
+          gcloud config list
+
       # ✅ PDPL guard — BigQuery dataset residency & retention (verbose + robust)
-      - name: PDPL guard — BigQuery dataset residency & retention
+      - name: PDPL guard: BigQuery residency & retention
         shell: bash
         env:
           WRITER_SA: service-671472133551@gcp-sa-logging.iam.gserviceaccount.com
@@ -51,7 +93,6 @@
           fi
 
           # 4) Sink writer has dataset IAM
-          # bq show (pretty json) lists dataset access bindings; check userByEmail matches the sink writer SA
           ACCESS_JSON="$(bq --location="${BQ_LOCATION}" --project_id="${GCP_PROJECT_ID}" show --format=prettyjson "${DATASET_ID}")"
           if echo "${ACCESS_JSON}" | jq -e --arg sa "${WRITER_SA}" '.access[]?|select(.userByEmail==$sa)' >/dev/null; then
             echo "✅ Sink writer IAM OK: ${WRITER_SA}"
@@ -61,3 +102,48 @@
           fi
 
           echo "✅ PDPL BigQuery checks passed (ME-CENTRAL1 + 12-month default + sink IAM)"
+
+      # ✅ Non-failing pre-check: ok if service doesn't exist yet
+      - name: Check Cloud Run service (allow not-found)
+        shell: bash
+        run: |
+          if gcloud run services describe aurify-ssr \
+               --region="${GCP_REGION}" \
+               --project="${GCP_PROJECT_ID}" >/dev/null 2>&1; then
+            echo "Service exists"
+          else
+            echo "Service not found yet (ok before first deploy)"
+          fi
+
+      - name: Ensure Artifact Registry exists (idempotent)
+        shell: bash
+        run: |
+          gcloud artifacts repositories describe cloud-run-source-deploy \
+            --location="${GCP_REGION}" \
+            --project="${GCP_PROJECT_ID}" \
+          || gcloud artifacts repositories create cloud-run-source-deploy \
+               --location="${GCP_REGION}" \
+               --repository-format=docker \
+               --description="Cloud Run source builds for Aurify1225" \
+               --project="${GCP_PROJECT_ID}"
+
+      - name: Deploy to Cloud Run (me-central1)
+        working-directory: ./aurify-web
+        shell: bash
+        run: |
+          gcloud run deploy aurify-ssr \
+            --region="${GCP_REGION}" \
+            --allow-unauthenticated \
+            --project="${GCP_PROJECT_ID}" \
+            --source . \
+            --set-env-vars=GCP_REGION="${GCP_REGION}" \
+            --set-env-vars=BQ_LOCATION=ME-CENTRAL1 \
+            --set-secrets=API_KEY=MY_API_KEY:latest
+
+      - name: Verify deploy
+        shell: bash
+        run: |
+          gcloud run services describe aurify-ssr \
+            --region="${GCP_REGION}" \
+            --project="${GCP_PROJECT_ID}" \
+            --format="value(status.url)"
