@@ -138,7 +138,7 @@ jobs:
             --source . \
             --set-env-vars=GCP_REGION="${GCP_REGION}" \
             --set-env-vars=BQ_LOCATION=ME-CENTRAL1 \
-            --set-secrets=API_KEY=MY_API_KEY:latest
+            --set-secrets=API_KEY=MY_API_KEY_MEC1:latest
 
       - name: Verify deploy
         shell: bash
