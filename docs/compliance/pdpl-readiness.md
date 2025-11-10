@@ -108,6 +108,19 @@ Cloud Run (aurify-ssr) — region: me-central1 (Doha)
 
 ---
 
+### BigQuery Logs Residency & Retention
+
+- **Dataset:** `aurify_logs`  
+- **Region:** **ME-CENTRAL1 (Doha, UAE)**  
+- **Default Table Expiration:** **12 months** (`defaultTableExpirationMs = 31536000000`)  
+- **Logs Router Sink:** `bq_aurify_logs` → destination `projects/aurify1225/datasets/aurify_logs`  
+- **Sink Writer Identity:** `service-671472133551@gcp-sa-logging.iam.gserviceaccount.com` (granted **BigQuery Data Editor** on the dataset)  
+- **Policy:** No PII in logs. If PII is unavoidable, redact at source or exclude categories via Logs Router filters.  
+- **CI/CD Guard:** Workflow step enforces dataset region = ME-CENTRAL1, default expiration = 12 months, and sink IAM presence before deploy.
+
+
+---
+
 ## 11) Change Control
 
 Any change affecting regions, data flows, or processors requires:  
