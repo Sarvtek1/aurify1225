@@ -1,14 +1,19 @@
-// aurify-web/i18n/request.ts
-import { getRequestConfig } from "next-intl/server";
+// i18n/request.ts
+import getRequestConfig, {type GetRequestConfigParams} from 'next-intl/server';
+import {defaultLocale, locales, type Locale} from './locales';
 
-export default getRequestConfig(async ({ locale }) => {
-  // Ensure locale is never undefined (default to English)
-  const currentLocale = locale || "en";
+function coerceLocale(input?: string): Locale {
+  return (locales as readonly string[]).includes(input ?? '')
+    ? (input as Locale)
+    : defaultLocale;
+}
 
-  const messages = (await import(`../messages/${currentLocale}.json`)).default;
+export default getRequestConfig(async (params: GetRequestConfigParams) => {
+  const l = coerceLocale(params.locale);
+  const messages = (await import(`../messages/${l}.json`)).default;
 
   return {
-    locale: currentLocale,
-    messages,
+    locale: l,
+    messages
   };
 });
