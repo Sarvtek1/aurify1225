@@ -1,7 +1,7 @@
 // app/[locale]/layout.tsx
 import type {ReactNode} from 'react';
 import {NextIntlClientProvider} from 'next-intl';
-import {getMessages} from 'next-intl/server';
+import {getMessages, setRequestLocale} from 'next-intl/server';
 import '../globals.css';
 import '@fontsource/tajawal';
 import {locales, type Locale, localeDirection, defaultLocale} from '../../i18n/locales';
@@ -27,9 +27,16 @@ export default async function LocaleLayout({
   params
 }: {
   children: ReactNode;
-  params: {locale?: string};
+  // ✅ Next 16 expects a Promise for route params in layouts
+  params: Promise<{locale: string}>;
 }) {
-  const locale = coerceLocale(params?.locale);
+  const {locale: raw} = await params;
+  const locale = coerceLocale(raw);
+
+  // Inform next-intl about the chosen locale for this request
+  setRequestLocale(locale);
+
+  // Load messages (next-intl v4)
   const messages = await getMessages();
 
   return (
