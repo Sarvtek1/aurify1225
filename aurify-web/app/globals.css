@@ -1,5 +1,10 @@
-@import "tailwindcss";
+/* ✅ globals.css — with Tailwind + RTL + Arabic font */
 
+/* Import Tailwind and Arabic-friendly font */
+@import "tailwindcss";
+@import "@fontsource/tajawal";
+
+/* Theme Variables */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -12,6 +17,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Dark Mode Theme */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -19,8 +25,31 @@
   }
 }
 
+/* ✅ Global Base Styles */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* ✅ RTL / LTR Support (automatic via <html dir="...">) */
+html[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+}
+
+html[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Tajawal', sans-serif;
+}
+
+/* Optional Arabic-specific tweaks for better layout balance */
+html[dir="rtl"] h1,
+html[dir="rtl"] h2,
+html[dir="rtl"] h3,
+html[dir="rtl"] p {
+  text-align: right;
 }
