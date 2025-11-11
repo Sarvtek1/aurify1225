@@ -72,6 +72,11 @@ Cloud Run (aurify-ssr) — region: me-central1 (Doha)
 - **Secrets:** Managed via Google Secret Manager in `me-central1`; injected into Cloud Run at runtime; never stored in the repository or Hosting configuration  
 
 ---
+- Secret Manager: user-managed replication in **me-central1 (Doha)** for application secrets.
+  - Secret: `MY_API_KEY` (or `MY_API_KEY_MEC1`) — access limited to Cloud Run runtime SA
+    `671472133551-compute@developer.gserviceaccount.com` (role: `secretmanager.secretAccessor`).
+  - Secrets are injected into Cloud Run via `--set-secrets` (no secrets in repo or Hosting).
+
 
 ## 7) Vendor & API Integrations
 
@@ -130,3 +135,48 @@ Any change affecting regions, data flows, or processors requires:
 _Last reviewed:_ 2025-11-09  
 _Compliance owner:_ SARVtek  
 _Change control ref:_ PDPL-2025.11.09-01
+
+
+Secret Manager Residency & Access Control
+
+Service: Secret Manager
+
+Replication Policy: User-managed (Doha, me-central1)
+
+Secret Name: MY_API_KEY_MEC1
+
+Purpose: API key for application use in Cloud Run
+
+Region: ME-CENTRAL1 (Doha, UAE)
+
+Access Control:
+
+Secret access restricted to Cloud Run runtime SA
+671472133551-compute@developer.gserviceaccount.com
+
+Role: roles/secretmanager.secretAccessor
+
+Integration:
+
+Secret injected at deploy time via
+--set-secrets=API_KEY=MY_API_KEY_MEC1:latest in .github/workflows/deploy-cloudrun.yml
+
+Policy:
+
+Secrets are never stored in source code or GitHub repo.
+
+All secrets must use user-managed replication in Doha (me-central1) to ensure data residency compliance with PDPL.
+
+Access logs monitored via Cloud Logging → BigQuery sink (bq_aurify_logs).
+
+### Frontend Hosting (Firebase)
+
+- **Hosting URL:** https://aurify1225.web.app  
+- **Configuration:** All static assets served via global CDN; dynamic SSR requests rewritten to Cloud Run (`me-central1`).  
+- **Rewrite Rule:**  
+  ```json
+  { "source": "/**", "run": { "serviceId": "aurify-ssr", "region": "me-central1" } }
+
+
+
+- DPIA/Data Transfer Assessment: completed and approved (2025-11-10)
