@@ -1,9 +1,11 @@
-// i18n/request.ts
-import {getRequestConfig} from "next-intl/server";
+// aurify-web/i18n/request.ts
+import { getRequestConfig } from "next-intl/server";
 
-export default getRequestConfig(async ({locale}) => {
+export default getRequestConfig(async ({ locale }) => {
+  const messages = (await import(`../messages/${locale}.json`)).default;
+
   return {
-    // Load your locale messages from /messages
-    messages: (await import(`../messages/${locale}.json`)).default
+    locale,
+    messages
   };
 });
