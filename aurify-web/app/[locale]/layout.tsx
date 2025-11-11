@@ -1,13 +1,12 @@
 // app/[locale]/layout.tsx
-import type {LayoutProps} from 'next';
+import type {ReactNode} from 'react';
 import {NextIntlClientProvider} from 'next-intl';
 import {getMessages} from 'next-intl/server';
 import '../globals.css';
 import '@fontsource/tajawal';
-
 import {locales, type Locale, localeDirection, defaultLocale} from '../../i18n/locales';
 
-// Prebuild both locales so SSG doesn’t ever pass an undefined locale.
+// Pre-generate /en and /ar
 export function generateStaticParams() {
   return locales.map((l) => ({locale: l}));
 }
@@ -17,18 +16,20 @@ export const metadata = {
   description: 'UAE-first SaaS for Amazon sellers'
 };
 
-// Helper to coerce unknown strings into our Locale union
-function coerceLocale(input: string): Locale {
-  return (locales as readonly string[]).includes(input) ? (input as Locale) : defaultLocale;
+function coerceLocale(input?: string): Locale {
+  return (locales as readonly string[]).includes(input ?? '')
+    ? (input as Locale)
+    : defaultLocale;
 }
 
-// NOTE: Do NOT make this async just to await params; params is NOT a Promise.
-// It’s fine to be async because we await getMessages().
-export default async function LocaleLayout({children, params}: LayoutProps<'/[locale]'>) {
-  const raw = params.locale;          // <- not a Promise
-  const locale = coerceLocale(raw);   // narrow to our Locale union
-
-  // next-intl v4: fetch messages for the active locale (set by middleware)
+export default async function LocaleLayout({
+  children,
+  params
+}: {
+  children: ReactNode;
+  params: {locale?: string};
+}) {
+  const locale = coerceLocale(params?.locale);
   const messages = await getMessages();
 
   return (
