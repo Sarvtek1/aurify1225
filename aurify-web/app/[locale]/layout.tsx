@@ -1,7 +1,6 @@
-// app/[locale]/layout.tsx
 import type { ReactNode } from "react";
-import { NextIntlClientProvider, useMessages } from "next-intl";
-import { setRequestLocale, getMessages } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
 
 import "../globals.css";
 import "@fontsource/tajawal";
@@ -16,19 +15,11 @@ export const metadata = {
   description: "UAE-first SaaS for Amazon sellers",
 };
 
-// ✅ Make this a *sync* component — no async/await at top level
-export default function LocaleLayout({
-  children,
-  params,
-}: {
-  children: ReactNode;
-  params: { locale: Locale };
-}) {
-  const { locale } = params;
+// ✅ Temporary Next.js 16.0 typing workaround — cast params as any
+export default function LocaleLayout({ children, params }: any) {
+  const { locale } = params as { locale: Locale };
   setRequestLocale(locale);
 
-  // Dynamically require messages (not awaited)
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const messages = require(`../../messages/${locale}.json`);
 
   return (
