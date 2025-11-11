@@ -1,14 +1,12 @@
 // app/[locale]/layout.tsx
 import type { ReactNode } from "react";
-import { NextIntlClientProvider } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { NextIntlClientProvider, useMessages } from "next-intl";
+import { setRequestLocale, getMessages } from "next-intl/server";
 
 import "../globals.css";
 import "@fontsource/tajawal";
-
 import { locales, type Locale, localeDirection } from "../../i18n/locales";
 
-// Pre-generate /en and /ar
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
@@ -18,7 +16,8 @@ export const metadata = {
   description: "UAE-first SaaS for Amazon sellers",
 };
 
-export default async function LocaleLayout({
+// ✅ Make this a *sync* component — no async/await at top level
+export default function LocaleLayout({
   children,
   params,
 }: {
@@ -26,12 +25,11 @@ export default async function LocaleLayout({
   params: { locale: Locale };
 }) {
   const { locale } = params;
-
-  // Tell next-intl which locale this request is for
   setRequestLocale(locale);
 
-  // Load messages for this locale
-  const messages = (await import(`../../messages/${locale}.json`)).default;
+  // Dynamically require messages (not awaited)
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const messages = require(`../../messages/${locale}.json`);
 
   return (
     <html lang={locale} dir={localeDirection[locale]}>
