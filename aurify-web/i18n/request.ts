@@ -1,6 +1,6 @@
 // i18n/request.ts
-import getRequestConfig, {type GetRequestConfigParams} from 'next-intl/server';
-import {defaultLocale, locales, type Locale} from './locales';
+import { getRequestConfig, type GetRequestConfigParams } from 'next-intl/server';
+import { defaultLocale, locales, type Locale } from './locales';
 
 function coerceLocale(input?: string): Locale {
   return (locales as readonly string[]).includes(input ?? '')
@@ -14,6 +14,6 @@ export default getRequestConfig(async (params: GetRequestConfigParams) => {
 
   return {
     locale: l,
-    messages
+    messages,
   };
 });
