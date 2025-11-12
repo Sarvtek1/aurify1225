@@ -1,6 +1,6 @@
-export type Locale = '\''en'\'' | '\''ar'\'';
+export type Locale = 'en' | 'ar';
 
-export const localeDirection: Record<Locale, '\''ltr'\'' | '\''rtl'\''> = {
-  en: '\''ltr'\'',
-  ar: '\''rtl'\'',
+export const localeDirection: Record<Locale, 'ltr' | 'rtl'> = {
+  en: 'ltr',
+  ar: 'rtl',
 };
