@@ -1,5 +1,8 @@
 ﻿import type { ReactNode } from 'react';
 import '../globals.css';
+// Load Tajawal font for Arabic pages (installed via @fontsource/tajawal)
+import '@fontsource/tajawal/400.css';
+import '@fontsource/tajawal/700.css';
 import type { Locale } from '../../i18n/locales';
 
 export default async function LocaleLayout({
