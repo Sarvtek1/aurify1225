@@ -2,15 +2,16 @@
 import type { ReactNode } from 'react';
 import { localeDirection, type Locale } from '../../i18n/locales';
 
-export default function LocaleLayout({
+export default async function LocaleLayout({
   children,
   params,
 }: {
   children: ReactNode;
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }> | { locale: Locale };
 }) {
-  const { locale } = params;
-  const dir = localeDirection[locale] ?? 'ltr';
+  const resolvedParams = await params;
+  const { locale } = resolvedParams;
+  const dir = localeDirection[locale as Locale] ?? 'ltr';
 
   return (
     <html lang={locale} dir={dir}>
