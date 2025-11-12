@@ -1,18 +1,25 @@
-﻿export default function LocaleLayout({
+﻿// app/[locale]/layout.tsx
+import type { ReactNode } from 'react';
+import '../globals.css';
+import { locales, type Locale, localeDirection } from '../../i18n/locales';
+
+// Pre-generate /en and /ar routes
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
+export default function LocaleLayout({
   children,
-  params
+  params,
 }: {
-  children: React.ReactNode;
-  params: { locale: "en" | "ar" };
+  children: ReactNode;
+  params: { locale: Locale }; // <-- plain object, not Promise
 }) {
-  const dir = params.locale === "ar" ? "rtl" : "ltr";
+  const { locale } = params;
+
   return (
-    <html lang={params.locale} dir={dir}>
+    <html lang={locale} dir={localeDirection[locale]}>
       <body>{children}</body>
     </html>
   );
-}
-
-export function generateStaticParams() {
-  return [{ locale: "en" }, { locale: "ar" }];
 }
