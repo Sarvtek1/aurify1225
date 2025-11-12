@@ -10,9 +10,11 @@ export default async function LocaleLayout({
   params,
 }: {
   children: ReactNode;
-  params: Promise<{ locale: Locale }> | { locale: Locale };
+  // Use a broad string type for params to satisfy Next.js generated types
+  params: Promise<{ locale: string }> | { locale: string };
 }) {
-  const { locale } = await params;
+  const rawParams = await params;
+  const locale = rawParams.locale as Locale;
   const isRTL = locale === 'ar';
   return (
     <html lang={locale} dir={isRTL ? 'rtl' : 'ltr'}>
