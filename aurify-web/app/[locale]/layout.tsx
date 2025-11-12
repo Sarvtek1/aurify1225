@@ -1,30 +1,27 @@
-﻿// aurify-web/app/[locale]/layout.tsx
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import "../globals.css";
 
-// Pre-generate the only two locales we support
-export function generateStaticParams(): Array<{ locale: "en" | "ar" }> {
+export function generateStaticParams() {
   return [{ locale: "en" }, { locale: "ar" }];
 }
 
-// Optional: keep static metadata — but do not make this file async
 export const metadata = {
   title: "Aurify1225",
   description: "UAE-first SaaS for Amazon sellers",
 };
 
-// IMPORTANT: Must be synchronous, no Promise return type
 export default function LocaleLayout({
   children,
   params,
 }: {
   children: ReactNode;
-  params: { locale: "en" | "ar" };
+  params: { locale: string };
 }) {
-  const { locale } = params;
+  const locale = params.locale === "ar" ? "ar" : "en";
+  const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
-    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
+    <html lang={locale} dir={dir}>
       <body
         style={{
           fontFamily:
