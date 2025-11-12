@@ -1,22 +1,23 @@
-﻿import type { ReactNode } from "react";
-
-export function generateStaticParams() {
-  return [{ locale: "en" }, { locale: "ar" }];
-}
+﻿// aurify-web/app/[locale]/layout.tsx
+import { ReactNode } from "react";
 
 export const metadata = {
   title: "Aurify1225",
   description: "UAE-first SaaS for Amazon sellers"
 };
 
-export default function LocaleLayout({
+export async function generateStaticParams() {
+  return [{ locale: "en" }, { locale: "ar" }];
+}
+
+export default async function LocaleLayout({
   children,
-  params,
+  params
 }: {
   children: ReactNode;
-  params: { locale: "en" | "ar" };
+  params: Promise<{ locale: "en" | "ar" }>;
 }) {
-  const { locale } = params;
+  const { locale } = await params;
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
