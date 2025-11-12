@@ -1,37 +1,29 @@
-﻿import type { ReactNode } from "react";
-import "../globals.css";
+﻿import type { ReactNode } from 'react';
 
+/** Generate only known locales at build time */
 export function generateStaticParams() {
-  return [{ locale: "en" }, { locale: "ar" }];
+  return [{ locale: 'en' }, { locale: 'ar' }];
 }
 
-export const metadata = {
-  title: "Aurify1225",
-  description: "UAE-first SaaS for Amazon sellers",
+type Locale = 'en' | 'ar';
+
+type LayoutProps = {
+  children: ReactNode;
+  params: { locale: Locale };
 };
 
-export default function LocaleLayout({
-  children,
-  params,
-}: {
-  children: ReactNode;
-  params: { locale: string };
-}) {
-  const locale = params.locale === "ar" ? "ar" : "en";
-  const dir = locale === "ar" ? "rtl" : "ltr";
+/** NOTE:
+ * - Do NOT make this function async.
+ * - Do NOT type params as Promise<...>.
+ * - Keep locale typed as the union: 'en' | 'ar'.
+ */
+export default function LocaleLayout({ children, params }: LayoutProps) {
+  const dir = params.locale === 'ar' ? 'rtl' : 'ltr';
+  const lang = params.locale;
 
   return (
-    <html lang={locale} dir={dir}>
-      <body
-        style={{
-          fontFamily:
-            locale === "ar"
-              ? "Tajawal, system-ui, sans-serif"
-              : "system-ui, sans-serif",
-        }}
-      >
-        {children}
-      </body>
+    <html lang={lang} dir={dir}>
+      <body>{children}</body>
     </html>
   );
 }

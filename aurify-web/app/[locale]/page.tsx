@@ -1,20 +1,20 @@
-﻿// aurify-web/app/[locale]/page.tsx
+﻿type Locale = 'en' | 'ar';
+
 export default function LocaleHome({
-  params,
+  params
 }: {
-  params: { locale: "en" | "ar" };
+  params: { locale: Locale };
 }) {
   const { locale } = params;
-
   return (
     <main style={{ padding: 24 }}>
       <h1 style={{ marginTop: 0 }}>
-        {locale === "ar" ? "مرحباً بكم في Aurify1225" : "Welcome to Aurify1225"}
+        {locale === 'ar' ? 'مرحباً بكم في Aurify1225' : 'Welcome to Aurify1225'}
       </h1>
       <p>
-        {locale === "ar"
-          ? "هذه هي الصفحة الرئيسية المحلية."
-          : "This is the localized home page."}
+        {locale === 'ar'
+          ? 'هذه هي الصفحة الرئيسية المترجمة.'
+          : 'This is the localized home page.'}
       </p>
       <p>
         Locale: <b>{locale}</b>
