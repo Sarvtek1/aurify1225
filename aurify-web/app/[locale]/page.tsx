@@ -1,4 +1,5 @@
 ﻿import type { Locale } from '../../i18n/locales';
+import IntlExample from './IntlExample';
 
 export default async function LocaleHome({
   params,
@@ -21,6 +22,7 @@ export default async function LocaleHome({
         <a href="/en" style={{ marginRight: 16 }}>English</a>
         <a href="/ar">العربية</a>
       </nav>
+      <IntlExample locale={locale} />
     </main>
   );
 }
