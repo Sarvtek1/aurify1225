@@ -1,11 +1,11 @@
 ﻿import type { Locale } from '../../i18n/locales';
 
-export default function LocaleHome({
+export default async function LocaleHome({
   params,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }> | { locale: Locale };
 }) {
-  const { locale } = params;
+  const { locale } = await params;
   return (
     <main style={{ padding: 24 }}>
       <h1 style={{ marginTop: 0 }}>
