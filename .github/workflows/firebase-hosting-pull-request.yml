@@ -25,8 +25,13 @@ jobs:
 
       - name: Deploy Preview Channel
         uses: FirebaseExtended/action-hosting-deploy@v0
+        # Use a Personal Access Token stored in repository secrets to allow the action
+        # to create check-runs when GITHUB_TOKEN is insufficient (for example, if
+        # the action needs explicit checks: write scope). Create a PAT with repo
+        # scope and save it as the repository secret named `PAT_TOKEN` (instructions
+        # below). Note: secrets are NOT available to workflows triggered by forks.
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          repoToken: ${{ secrets.PAT_TOKEN }}
           firebaseServiceAccount: ${{ secrets.GCP_SA_KEY }}
           projectId: aurify1225
           # How long preview stays alive
