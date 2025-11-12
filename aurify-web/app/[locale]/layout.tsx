@@ -1,24 +1,25 @@
-﻿// app/[locale]/layout.tsx
-import type { ReactNode } from 'react';
-import '../globals.css';
-import { locales, type Locale, localeDirection } from '../../i18n/locales';
+﻿import type { ReactNode } from 'react';
 
-// Pre-generate /en and /ar routes
 export function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
+  return [{ locale: 'en' }, { locale: 'ar' }];
 }
+
+export const metadata = {
+  title: 'Aurify1225',
+  description: 'UAE-first SaaS for Amazon sellers'
+};
 
 export default function LocaleLayout({
   children,
-  params,
+  params
 }: {
   children: ReactNode;
-  params: { locale: Locale }; // <-- plain object, not Promise
+  params: { locale: 'en' | 'ar' };
 }) {
   const { locale } = params;
-
+  const dir = locale === 'ar' ? 'rtl' : 'ltr';
   return (
-    <html lang={locale} dir={localeDirection[locale]}>
+    <html lang={locale} dir={dir}>
       <body>{children}</body>
     </html>
   );
