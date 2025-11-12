@@ -1,21 +1,16 @@
-﻿import '../globals.css';
-import type { ReactNode } from 'react';
-import { localeDirection, type Locale } from '../../i18n/locales';
+﻿import type { ReactNode } from 'react';
+import '../globals.css';
 
-export default async function LocaleLayout({
+export default function LocaleLayout({
   children,
-  params,
+  params
 }: {
   children: ReactNode;
-  params: Promise<{ locale: Locale }> | { locale: Locale };
+  params: { locale: 'en' | 'ar' };
 }) {
-  const resolvedParams = await params;
-  const { locale } = resolvedParams;
-  const dir = localeDirection[locale as Locale] ?? 'ltr';
-
+  const isRTL = params.locale === 'ar';
   return (
-    <html lang={locale} dir={dir}>
-      <head />
+    <html lang={params.locale} dir={isRTL ? 'rtl' : 'ltr'}>
       <body>{children}</body>
     </html>
   );
