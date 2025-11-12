@@ -1,6 +1,4 @@
-// i18n/locales.ts
-export const locales = ['en', 'ar'] as const;
-export type Locale = (typeof locales)[number];
+export type Locale = 'en' | 'ar';
 
 export const localeDirection: Record<Locale, 'ltr' | 'rtl'> = {
   en: 'ltr',

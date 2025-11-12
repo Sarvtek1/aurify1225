@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  checks: write
 
 jobs:
   deploy:
@@ -25,8 +26,10 @@ jobs:
 
       - name: Deploy to Firebase Hosting (live)
         uses: FirebaseExtended/action-hosting-deploy@v0
+        # Use PAT_TOKEN if GITHUB_TOKEN doesn't allow creating check-runs.
+        # Create a PAT (repo scope) and save it as repo secret `PAT_TOKEN`.
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          repoToken: ${{ secrets.PAT_TOKEN }}
           # 🔐 Use the same service-account JSON you use elsewhere
           firebaseServiceAccount: ${{ secrets.GCP_SA_KEY }}
           projectId: aurify1225
