@@ -41,7 +41,6 @@ jobs:
 
       - name: Verify gcloud context
         shell: bash
-        # This step ignores working-directory, it's fine anywhere
         working-directory: .
         run: |
           gcloud --version
@@ -103,7 +102,6 @@ jobs:
       - name: Check Next.js build locally (preflight)
         run: npm run build
         env:
-          # Make sure Next picks the right regionized settings if any
           NEXT_TELEMETRY_DISABLED: '1'
 
       # ---------- Create a minimal .gcloudignore just for aurify-web ----------
@@ -142,18 +140,41 @@ jobs:
                --description="Cloud Run source builds for Aurify1225" \
                --project="${GCP_PROJECT_ID}"
 
-      # ---------- Deploy from the subfolder ----------
       - name: Deploy to Cloud Run (me-central1)
         shell: bash
         run: |
+          # Create service account if it doesn't exist
+          gcloud iam service-accounts describe aurify-run-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com \
+            --project="${GCP_PROJECT_ID}" >/dev/null 2>&1 || \
+          gcloud iam service-accounts create aurify-run-sa \
+            --display-name="Aurify Cloud Run Runtime SA" \
+            --project="${GCP_PROJECT_ID}"
+          
+          # Grant minimal required roles
+          gcloud projects add-iam-policy-binding "${GCP_PROJECT_ID}" \
+            --member="serviceAccount:aurify-run-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+            --role="roles/logging.logWriter" \
+            --condition=None || true
+          
+          gcloud projects add-iam-policy-binding "${GCP_PROJECT_ID}" \
+            --member="serviceAccount:aurify-run-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+            --role="roles/secretmanager.secretAccessor" \
+            --condition=None || true
+          
+          # Deploy to Cloud Run
           gcloud run deploy aurify-ssr \
             --region="${GCP_REGION}" \
             --allow-unauthenticated \
             --project="${GCP_PROJECT_ID}" \
             --source . \
+            --clear-base-image \
+            --service-account="aurify-run-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
             --set-env-vars=GCP_REGION="${GCP_REGION}" \
             --set-env-vars=BQ_LOCATION=ME-CENTRAL1 \
-            --set-secrets=API_KEY=MY_API_KEY_MEC1:latest
+            --set-secrets=API_KEY=MY_API_KEY_MEC1:latest \
+            --memory=1Gi \
+            --concurrency=80 \
+            --max-instances=10
 
       - name: Verify deploy (print service URL)
         shell: bash
