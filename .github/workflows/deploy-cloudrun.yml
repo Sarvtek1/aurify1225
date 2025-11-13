@@ -41,46 +41,11 @@ jobs:
 
       - name: Verify gcloud context
         shell: bash
-        # This step ignores working-directory, it's fine anywhere
         working-directory: .
         run: |
           gcloud --version
           bq --version || true
           gcloud config list
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Set up gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ env.GCP_PROJECT_ID }}
-
-      - name: Verify HTML caching policy (no-store)
-        shell: bash
-        run: |
-          echo "🔍 Verifying that firebase.json blocks HTML caching..."
-          jq -e '
-            .hosting.headers
-            | map(select(.source | test("\\.html$")))
-            | .[]?.headers
-            | map(select(.key == "Cache-Control" and .value | test("no-store")))
-            | length > 0
-          ' firebase.json >/dev/null || {
-            echo "❌ HTML must be served with Cache-Control: no-store in Hosting headers."
-            exit 1
-          }
-
-      - name: Deploy to Firebase Hosting
-        run: firebase deploy --only hosting --project aurify1225
 
       # ---------- PDPL guard ----------
       - name: "PDPL guard - BigQuery residency & retention"
@@ -175,19 +140,41 @@ jobs:
                --description="Cloud Run source builds for Aurify1225" \
                --project="${GCP_PROJECT_ID}"
 
-      # ---------- Deploy from the subfolder ----------
       - name: Deploy to Cloud Run (me-central1)
         shell: bash
         run: |
+          # Create service account if it doesn't exist
+          gcloud iam service-accounts describe aurify-run-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com \
+            --project="${GCP_PROJECT_ID}" >/dev/null 2>&1 || \
+          gcloud iam service-accounts create aurify-run-sa \
+            --display-name="Aurify Cloud Run Runtime SA" \
+            --project="${GCP_PROJECT_ID}"
+          
+          # Grant minimal required roles
+          gcloud projects add-iam-policy-binding "${GCP_PROJECT_ID}" \
+            --member="serviceAccount:aurify-run-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+            --role="roles/logging.logWriter" \
+            --condition=None || true
+          
+          gcloud projects add-iam-policy-binding "${GCP_PROJECT_ID}" \
+            --member="serviceAccount:aurify-run-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+            --role="roles/secretmanager.secretAccessor" \
+            --condition=None || true
+          
+          # Deploy to Cloud Run
           gcloud run deploy aurify-ssr \
             --region="${GCP_REGION}" \
             --allow-unauthenticated \
             --project="${GCP_PROJECT_ID}" \
             --source . \
+            --clear-base-image \
             --service-account="aurify-run-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
             --set-env-vars=GCP_REGION="${GCP_REGION}" \
             --set-env-vars=BQ_LOCATION=ME-CENTRAL1 \
-            --set-secrets=API_KEY=MY_API_KEY_MEC1:latest
+            --set-secrets=API_KEY=MY_API_KEY_MEC1:latest \
+            --memory=1Gi \
+            --concurrency=80 \
+            --max-instances=10
 
       - name: Verify deploy (print service URL)
         shell: bash

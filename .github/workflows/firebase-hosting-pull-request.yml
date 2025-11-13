@@ -19,19 +19,17 @@ jobs:
         with:
           node-version: '20'
 
-      # If your preview needs a build first, uncomment:
-      # - run: npm ci && npm run build
-      #   working-directory: ./aurify-web
+      # Build Next.js app for preview
+      - name: Build Next.js app
+        run: npm ci && npm run build
+        working-directory: ./aurify-web
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
 
       - name: Deploy Preview Channel
         uses: FirebaseExtended/action-hosting-deploy@v0
-        # Use a Personal Access Token stored in repository secrets to allow the action
-        # to create check-runs when GITHUB_TOKEN is insufficient (for example, if
-        # the action needs explicit checks: write scope). Create a PAT with repo
-        # scope and save it as the repository secret named `PAT_TOKEN` (instructions
-        # below). Note: secrets are NOT available to workflows triggered by forks.
         with:
-          repoToken: ${{ secrets.PAT_TOKEN }}
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.GCP_SA_KEY }}
           projectId: aurify1225
           # How long preview stays alive
