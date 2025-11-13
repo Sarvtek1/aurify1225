@@ -1,31 +1,33 @@
-# Multi-stage Dockerfile for Next.js App Router optimized for Cloud Run
-# Builder stage
-FROM node:20-bullseye-slim AS builder
+# ---------- Builder ----------
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Install dependencies
-COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY package*.json ./
+RUN npm ci
 
-# Copy source and build
+# Copy source and build Next.js (standalone)
 COPY . .
 RUN npm run build
 
-# Production stage
-FROM node:20-bullseye-slim AS runner
+# ---------- Runner ----------
+FROM node:20-alpine AS runner
 WORKDIR /app
-
 ENV NODE_ENV=production
-ENV PORT=8080
+ENV NEXT_TELEMETRY_DISABLED=1
+# Cloud Run listens on 8080
+ENV PORT=8080 HOST=0.0.0.0
 
-# Copy production dependencies and build output
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./.next
+# Copy the minimal runtime produced by "output: 'standalone'"
+COPY --from=builder /app/.next/standalone ./
+# Static assets
+COPY --from=builder /app/.next/static ./.next/static
+# Public assets (favicons, images…)
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.js ./next.config.js
+
+# (Optional) run as non-root
+RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
+USER nextjs
 
 EXPOSE 8080
-
-# Use the Next.js start script which respects $PORT
-CMD ["npm", "run", "start"]
+CMD ["node", "server.js"]
